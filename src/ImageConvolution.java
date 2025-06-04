@@ -32,13 +32,14 @@ public class ImageConvolution {
         }
         return result;
     }
-
-    // Flou par moyenne 3x3
-    public static double[][] mean3x3() {
-        double[][] kernel = new double[3][3];
-        for (int i = 0; i < 3; i++)
-            for (int j = 0; j < 3; j++)
-                kernel[i][j] = 1.0 / 9.0;
+    
+    // Flou par moyenne de taille variable (remplace mean3x3 et mean7x7)
+    public static double[][] meanKernel(int size) {
+        double[][] kernel = new double[size][size];
+        double val = 1.0 / (size * size);
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                kernel[i][j] = val;
         return kernel;
     }
 
@@ -51,16 +52,6 @@ public class ImageConvolution {
         };
     }
 
-    // Flou par moyenne de taille variable
-    public static double[][] meanKernel(int size) {
-        double[][] kernel = new double[size][size];
-        double val = 1.0 / (size * size);
-        for (int i = 0; i < size; i++)
-            for (int j = 0; j < size; j++)
-                kernel[i][j] = val;
-        return kernel;
-    }
-
     // Filtre gaussien 5x5 (σ ≈ 1), à normaliser avant usage
     public static double[][] gauss5x5() {
         double[][] kernel = {
@@ -69,6 +60,20 @@ public class ImageConvolution {
             {6, 24, 36, 24, 6},
             {4, 16, 24, 16, 4},
             {1,  4,  6,  4, 1}
+        };
+        return normalizeKernel(kernel);
+    }
+
+    // Filtre gaussien 7x7 (σ ≈ 1.5), à normaliser avant usage
+    public static double[][] gauss7x7() {
+        double[][] kernel = {
+            {  0,   0,   1,   2,   1,   0,  0 },
+            {  0,   3,  13,  22,  13,   3,  0 },
+            {  1,  13,  59,  97,  59,  13,  1 },
+            {  2,  22,  97, 159,  97,  22,  2 },
+            {  1,  13,  59,  97,  59,  13,  1 },
+            {  0,   3,  13,  22,  13,   3,  0 },
+            {  0,   0,   1,   2,   1,   0,  0 }
         };
         return normalizeKernel(kernel);
     }
