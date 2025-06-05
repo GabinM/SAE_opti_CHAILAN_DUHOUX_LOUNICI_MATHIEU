@@ -3,7 +3,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.*;
 
-public class KMeansClustering {
+public class KMeansClustering implements ClusteringAlgorithm {
     private Random rand = new Random();
 
     // Extraction des couleurs RGB de l'image
