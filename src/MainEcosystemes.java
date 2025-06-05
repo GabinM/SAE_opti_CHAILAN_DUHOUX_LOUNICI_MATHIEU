@@ -10,29 +10,31 @@ public class MainEcosystemes {
         // 1. Paramètres
         String inputImage = "Planete_1.jpg";
         int nBiomes = 6; // À ajuster selon l'image
-        double eps = 2.0; // Distance DBSCAN (à tester)
-        int minPts = 4;   // DBSCAN (à tester)
+        double eps = 3; // Distance DBSCAN (à tester)
+        int minPts = 9;   // DBSCAN (à tester)
 
-        // 2. Flouter l'image (5x5 moyenne)
-        BufferedImage img = ImageIO.read(new File(inputImage));
+        Color[] palette = AlgoKMeans.getPalette(inputImage, 10, new Norme94());
+
+        // traitee image
+        BiomeDisplay.imageToPalette(inputImage, "planete_1_traitee.png", palette);
+        //inputImage = "planete_1_traitee.png";
+    
 
         // Redimensionner l'image à 500x500
         int targetWidth = 500, targetHeight = 500;
+        BufferedImage img = ImageIO.read(new File(inputImage));
         BufferedImage resizedImg = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
         resizedImg.getGraphics().drawImage(
             img.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH),
             0, 0, null
         );
 
-        double[][] mean5x5 = ImageConvolution.meanKernel(5);
-        BufferedImage blurImg = ImageConvolution.applyFilter(resizedImg, mean5x5);
-
         // 3. Appliquer KMeans sur les couleurs (espace RGB)
-        int width = blurImg.getWidth(), height = blurImg.getHeight();
+        int width = resizedImg.getWidth(), height = resizedImg.getHeight();
         double[][] pixels = new double[width * height][3];
         for (int y = 0; y < height; y++)
             for (int x = 0; x < width; x++) {
-                int rgb = blurImg.getRGB(x, y);
+                int rgb = resizedImg.getRGB(x, y);
                 pixels[y * width + x][0] = (rgb >> 16) & 0xFF;
                 pixels[y * width + x][1] = (rgb >> 8) & 0xFF;
                 pixels[y * width + x][2] = rgb & 0xFF;
@@ -42,10 +44,10 @@ public class MainEcosystemes {
         int[] biomeLabels = kmeans.cluster(pixels, nBiomes);
 
         // 4. Créer la matrice de labels par pixel
-        int[][] labels = new int[height][width];
+        int[][] clusters = new int[height][width];
         for (int y = 0; y < height; y++)
             for (int x = 0; x < width; x++)
-                labels[y][x] = biomeLabels[y * width + x];
+                clusters[y][x] = biomeLabels[y * width + x];
 
         // 5. Pour chaque biome, appliquer DBSCAN spatial et générer l’image des écosystèmes
         for (int biomeId = 0; biomeId < nBiomes; biomeId++) {
@@ -53,7 +55,7 @@ public class MainEcosystemes {
             List<int[]> coordsList = new ArrayList<>();
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
-                    if (labels[y][x] == biomeId)
+                    if (clusters[y][x] == biomeId)
                         coordsList.add(new int[]{x, y});
 
             if (coordsList.isEmpty()) continue;
@@ -72,7 +74,7 @@ public class MainEcosystemes {
 
             // d. Créer l'image à afficher
             // On part d'une version blanchie de l'image floutée pour le fond
-            BufferedImage ecoImg = ImageUtils.rendreFondClair(blurImg, 0.75);
+            BufferedImage ecoImg = ImageUtils.rendreFondClair(resizedImg, 0.75);
 
             // e. Colorier chaque écosystème d'une couleur différente
             for (int i = 0; i < coords.length; i++) {
