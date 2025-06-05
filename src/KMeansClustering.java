@@ -16,8 +16,8 @@ public class KMeansClustering {
             for (int x = 0; x < width; x++) {
                 int rgb = img.getRGB(x, y);
                 pixels[y * width + x][0] = (rgb >> 16) & 0xFF; // R
-                pixels[y * width + x][1] = (rgb >> 8) & 0xFF;  // G
-                pixels[y * width + x][2] = rgb & 0xFF;         // B
+                pixels[y * width + x][1] = (rgb >> 8) & 0xFF; // G
+                pixels[y * width + x][2] = rgb & 0xFF; // B
             }
         }
         return pixels;
@@ -44,7 +44,7 @@ public class KMeansClustering {
         boolean changed;
         do {
             changed = false;
-            // Affectation à le centroïde le plus proche
+            // Affectation au centroïde le plus proche
             for (int i = 0; i < n; i++) {
                 int best = -1;
                 double bestDist = Double.MAX_VALUE;
