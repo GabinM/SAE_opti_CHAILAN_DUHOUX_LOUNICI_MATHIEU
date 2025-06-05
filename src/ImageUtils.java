@@ -11,22 +11,22 @@ public class ImageUtils {
      * @param path le fichier d'entrée
      * @return l'objet image
      */
-    public static BufferedImage read(String path){
-        BufferedImage image = null; // Initialisation de l'image
+    public static BufferedImage loadImage(String path){
         try {
-            image = ImageIO.read(new File(path)); // Lecture de l'image
+            return ImageIO.read(new File(path));
         } catch (IOException e) {
-            System.out.println("Erreur de lecture de l'image : " + e.getMessage());
+            System.err.println("Erreur lors du chargement de l'image : " + path);
+            e.printStackTrace();
+            return null;
         }
-        return image; // Retourne l'image
     }
 
     /**
-     * Méthode permettant d'écrire une image dans un fichier
+     * Méthode permettant de save une image dans un fichier
      * @param img
      * @param path
      */
-    public static void write(BufferedImage img, String path) {
+    public static void saveImage(BufferedImage img, String path) {
         try {
             ImageIO.write(img, "png", new File(path));
         } catch (IOException e) {
@@ -54,16 +54,13 @@ public class ImageUtils {
                 int g = (int) Math.round(c.getGreen() + pourcentage * (255 - c.getGreen()));
                 int b = (int) Math.round(c.getBlue() + pourcentage * (255 - c.getBlue()));
 
-                // On s'assure que les valeurs sont dans [0,255]
-                r = Math.min(255, Math.max(0, r));
-                g = Math.min(255, Math.max(0, g));
-                b = Math.min(255, Math.max(0, b));
+                Color bright = new Color(Math.min(r, 255), Math.min(g, 255), Math.min(b, 255));
 
-                res.setRGB(i, j, new Color(r, g, b).getRGB());
+                res.setRGB(i, j, bright.getRGB());
             }
         }
         return res;
     }
 
-    
+
 }

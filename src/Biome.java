@@ -1,6 +1,6 @@
 import java.awt.*;
 
-public enum Biomes {
+public enum Biome {
     TUNDRA(new Color(71, 70, 61), "Tundra"),
     TAIGA(new Color(43, 50, 35), "Taiga"),
     FORET_TEMPEREE(new Color(59, 66, 43), "Forêt tempérée"),
@@ -10,14 +10,13 @@ public enum Biomes {
     DESERT(new Color(152, 140, 120), "Désert"),
     GLACIER(new Color(200, 200, 200), "Glacier"),
     EAU_PEU_PROFONDE(new Color(49, 83, 100), "Eau peu profonde"),
-    EAU_PROFONDE(new Color(12, 31, 47), "Eau profonde")
-    ;
+    EAU_PROFONDE(new Color(12, 31, 47), "Eau profonde");
 
 
     private final Color color;
     private final String name;
 
-    Biomes(Color color, String name) {
+    Biome(Color color, String name) {
         this.color = color;
         this.name = name;
     }
