@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.util.HashMap;
 
 public class Norme94 {
 
