@@ -8,33 +8,40 @@ public class MainEcosystemes {
 
     public static void main(String[] args) throws Exception {
         // 1. Paramètres
-        String inputImage = "Planete_1.jpg";
+        String inputImage = "images/Planete_2.jpg";
         int nBiomes = 6; // À ajuster selon l'image
         double eps = 3; // Distance DBSCAN (à tester)
         int minPts = 9;   // DBSCAN (à tester)
+        double scalePercent = 0.33; // 50% de la taille originale
 
         Color[] palette = AlgoKMeans.getPalette(inputImage, 10, new Norme94());
 
         // traitee image
-        BiomeDisplay.imageToPalette(inputImage, "planete_1_traitee.png", palette);
+        BiomeDisplay.imageToPalette(inputImage, "planete_traitee.png", palette);
         //inputImage = "planete_1_traitee.png";
-    
 
-        // Redimensionner l'image à 500x500
-        int targetWidth = 500, targetHeight = 500;
-        BufferedImage img = ImageIO.read(new File(inputImage));
+        // flouter l'image
+        BufferedImage imgflou = ImageIO.read(new File(inputImage));
+
+
+        // Redimensionner l'image à un pourcentage donné
+        int targetWidth = (int) (imgflou.getWidth() * scalePercent);
+        int targetHeight = (int) (imgflou.getHeight() * scalePercent);
         BufferedImage resizedImg = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
         resizedImg.getGraphics().drawImage(
-            img.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH),
+                imgflou.getScaledInstance(targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH),
             0, 0, null
         );
 
+        double[][] flou = ImageConvolution.meanKernel(5);
+        BufferedImage img = ImageConvolution.applyFilter(resizedImg, flou);
+
         // 3. Appliquer KMeans sur les couleurs (espace RGB)
-        int width = resizedImg.getWidth(), height = resizedImg.getHeight();
+        int width = img.getWidth(), height = img.getHeight();
         double[][] pixels = new double[width * height][3];
         for (int y = 0; y < height; y++)
             for (int x = 0; x < width; x++) {
-                int rgb = resizedImg.getRGB(x, y);
+                int rgb = img.getRGB(x, y);
                 pixels[y * width + x][0] = (rgb >> 16) & 0xFF;
                 pixels[y * width + x][1] = (rgb >> 8) & 0xFF;
                 pixels[y * width + x][2] = rgb & 0xFF;
@@ -74,7 +81,7 @@ public class MainEcosystemes {
 
             // d. Créer l'image à afficher
             // On part d'une version blanchie de l'image floutée pour le fond
-            BufferedImage ecoImg = ImageUtils.rendreFondClair(resizedImg, 0.75);
+            BufferedImage ecoImg = ImageUtils.rendreFondClair(img, 0.75);
 
             // e. Colorier chaque écosystème d'une couleur différente
             for (int i = 0; i < coords.length; i++) {
