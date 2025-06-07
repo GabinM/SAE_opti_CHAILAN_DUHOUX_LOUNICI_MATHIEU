@@ -1,58 +1,85 @@
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.util.*;
+
+import javax.management.RuntimeErrorException;
+
+//là faut faire en sorte que la zone recherchée soit plus petite
+//au lieu de rechercher la distance entre tous les points de l'image, juste rechercher ceux
+//qui sont dans une certaine zone (dans le for, mettre la position de la couleur + delta)
 
 public class DBSCAN2D {
 
-    public static int[] cluster(int[][] coords, double eps, int minPts) {
-        int n = coords.length;
-        int[] labels = new int[n];
-        Arrays.fill(labels, -1); // -1 = bruit
+    // eps : rayon de détection pour chaque point
+    public static int[][] cluster(BufferedImage img, Color c, double eps, int minPts) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int clusterId = 1;
+        int[][] visited = new int[width][height];
+        // 0 : pas visité, -1 : visité mais est un bruit
 
-        int clusterId = 0;
-        boolean[] visited = new boolean[n];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (visited[i][j] != 0 || img.getRGB(i, j) != c.getRGB())
+                    continue;
+                visited[i][j] = clusterId; // 1 normalement
 
-        for (int i = 0; i < n; i++) {
-            if (visited[i]) continue;
-            visited[i] = true;
+                List<int[]> neighbors = regionQuery(img, i, j, eps, c);
 
-            List<Integer> neighbors = regionQuery(coords, i, eps);
-
-            if (neighbors.size() < minPts) {
-                labels[i] = -1; // bruit
-            } else {
-                clusterId++;
-                expandCluster(coords, labels, visited, i, neighbors, clusterId, eps, minPts);
+                if (neighbors.size() < minPts) {
+                    visited[i][j] = -1; // bruit
+                } else {
+                    clusterId++;
+                    expandCluster(img, visited, i, j, neighbors, clusterId, eps, minPts, c);
+                }
             }
+
         }
-        return labels;
+        System.out.println("nombre de clusters : " + clusterId);
+        return visited;
     }
 
-    private static void expandCluster(int[][] coords, int[] labels, boolean[] visited,
-                                      int idx, List<Integer> neighbors, int clusterId, double eps, int minPts) {
-        labels[idx] = clusterId;
-        Queue<Integer> queue = new LinkedList<>(neighbors);
+    private static void expandCluster(BufferedImage img, int[][] visited,
+            int x, int y, List<int[]> neighbors, int clusterId, double eps, int minPts, Color c) {
+        visited[x][y] = clusterId;
+        Queue<int[]> queue = new LinkedList<>(neighbors);
         while (!queue.isEmpty()) {
-            int j = queue.poll();
-            if (!visited[j]) {
-                visited[j] = true;
-                List<Integer> neigh2 = regionQuery(coords, j, eps);
+            int[] loc = queue.poll();
+            int val = visited[loc[0]][loc[1]];
+            if (val == 0) {
+                visited[loc[0]][loc[1]] = clusterId;
+                List<int[]> neigh2 = regionQuery(img, loc[0], loc[1], eps, c);
                 if (neigh2.size() >= minPts) {
                     queue.addAll(neigh2);
                 }
-            }
-            if (labels[j] == -1) {
-                labels[j] = clusterId;
+            } else if (val == -1) {
+                visited[loc[0]][loc[1]] = clusterId;
             }
         }
     }
 
-    private static List<Integer> regionQuery(int[][] coords, int idx, double eps) {
-        List<Integer> neighbors = new ArrayList<>();
-        for (int i = 0; i < coords.length; i++) {
-            if (distance(coords[idx], coords[i]) <= eps) {
-                neighbors.add(i);
+    private static List<int[]> regionQuery(BufferedImage img, int x, int y, double eps, Color c) {
+        List<int[]> neighbors = new ArrayList<>();
+        int intRadius = (int) Math.round(eps);
+        int minX = Math.max(0, x - intRadius);
+        int minY = Math.max(0, y - intRadius);
+        int maxX = Math.min(img.getWidth(), x + intRadius);
+        int maxY = Math.min(img.getHeight(), y + intRadius);
+        for (int i = minX; i < maxX; i++) {
+            for (int j = minY; j < maxY; j++) {
+                /*
+                 * if (distance(coords[idx], coords[i]) <= eps) {
+                 * neighbors.add(i);
+                 */
+                if (img.getRGB(i, j) == c.getRGB()) {
+                    neighbors.add(new int[] { i, j });
+                }
+
             }
+
         }
         return neighbors;
+
     }
 
     private static double distance(int[] a, int[] b) {
